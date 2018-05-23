@@ -202,38 +202,36 @@ public:
     // methods that affect movement of the vehicle in this mode
     void update() override;
 
-    // attributes for mavlink system status reporting
-    bool has_manual_input() const override { return false; }
+    // attributes of the mode
+    bool is_autopilot_mode() const override { return true; }
 
-    // acro mode requires a velocity estimate for non skid-steer rovers
-    bool requires_position() const override { return true; }
-    bool requires_velocity() const override;
-    
-    // return if in non-manual mode : AUTO, GUIDED, RTL
-    virtual bool is_autopilot_mode() const { return true; }
-
-    // returns true if steering is directly controlled by RC
-    virtual bool manual_steering() const { return false; }
-
-    // returns true if the throttle is controlled automatically
-    virtual bool auto_throttle() { return is_autopilot_mode(); }
+    // return distance (in meters) to destination
+    float get_distance_to_destination() const override;
 
     // set desired location, heading and speed
-    void set_desired_location(const struct Location& destination, float next_leg_bearing_cd = MODE_NEXT_HEADING_UNKNOWN);
-    bool reached_destination() override;
-
-    // heading and speed control
+    void set_desired_location(const struct Location& destination);
     void set_desired_heading_and_speed(float yaw_angle_cd, float target_speed) override;
-    bool reached_heading();
 
-    // execute the mission in reverse (i.e. backing up)
-    void set_reversed(bool value);
-    
+    // set desired heading-delta, turn-rate and speed
+    void set_desired_heading_delta_and_speed(float yaw_delta_cd, float target_speed);
+    void set_desired_turn_rate_and_speed(float turn_rate_cds, float target_speed);
+
 protected:
 
+    enum GuidedMode {
+        Guided_WP,
+        Guided_HeadingAndSpeed,
+        Guided_TurnRateAndSpeed
+    };
+
     bool _enter() override;
-    void _exit() override;
-    
+
+    GuidedMode _guided_mode;    // stores which GUIDED mode the vehicle is in
+
+    // attitude control
+    bool have_attitude_target;  // true if we have a valid attitude target
+    uint32_t _des_att_time_ms;  // system time last call to set_desired_attitude was made (used for timeout)
+    float _desired_yaw_rate_cds;// target turn rate centi-degrees per second
 };
 
 class ModeAuto : public Mode
