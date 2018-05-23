@@ -192,6 +192,49 @@ public:
     bool requires_velocity() const override;
 };
 
+class ModeLaunch : public Mode
+{
+public:
+
+    uint32_t mode_number() const override { return LAUNCH; }
+    const char *name4() const override { return "LNCH"; }
+
+    // methods that affect movement of the vehicle in this mode
+    void update() override;
+
+    // attributes for mavlink system status reporting
+    bool has_manual_input() const override { return false; }
+
+    // acro mode requires a velocity estimate for non skid-steer rovers
+    bool requires_position() const override { return true; }
+    bool requires_velocity() const override;
+    
+    // return if in non-manual mode : AUTO, GUIDED, RTL
+    virtual bool is_autopilot_mode() const { return true; }
+
+    // returns true if steering is directly controlled by RC
+    virtual bool manual_steering() const { return false; }
+
+    // returns true if the throttle is controlled automatically
+    virtual bool auto_throttle() { return is_autopilot_mode(); }
+
+    // set desired location, heading and speed
+    void set_desired_location(const struct Location& destination, float next_leg_bearing_cd = MODE_NEXT_HEADING_UNKNOWN);
+    bool reached_destination() override;
+
+    // heading and speed control
+    void set_desired_heading_and_speed(float yaw_angle_cd, float target_speed) override;
+    bool reached_heading();
+
+    // execute the mission in reverse (i.e. backing up)
+    void set_reversed(bool value);
+    
+protected:
+
+    bool _enter() override;
+    void _exit() override;
+    
+};
 
 class ModeAuto : public Mode
 {
