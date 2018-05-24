@@ -204,9 +204,6 @@ public:
 
     // attributes of the mode
     bool is_autopilot_mode() const override { return true; }
-
-    // return distance (in meters) to destination
-    float get_distance_to_destination() const override;
     
 protected:
 
